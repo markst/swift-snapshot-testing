@@ -964,7 +964,7 @@ func snapshotView(
     if config.safeArea == .zero { view.frame.origin = .init(x: offscreen, y: offscreen) }
 
     return (view.snapshot ?? Async { callback in
-      addImagesForRenderedViews(view).sequence().run { views in
+      addImagesForRenderedViews(view).sequence().delay(by: 1.0).run { views in
         callback(
           renderer(bounds: view.bounds, for: traits).image { ctx in
             if drawHierarchyInKeyWindow {
@@ -1117,6 +1117,18 @@ extension Array {
           if count == self.count {
             callback(result as! [A])
           }
+        }
+      }
+    }
+  }
+}
+
+extension Async {
+  func delay(by timeInterval: TimeInterval) -> Async<Value> {
+    return Async<Value> { callback in
+      self.run { value in
+        DispatchQueue.main.asyncAfter(deadline: .now() + timeInterval) {
+          callback(value)
         }
       }
     }
